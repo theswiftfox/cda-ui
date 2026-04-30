@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+# SPDX-FileCopyrightText: 2026 Elena Gantner
+
+version = 1
+
+[[annotations]]
+path = [
+  "package.json",
+  "package-lock.json",
+  "tsconfig.json",
+  "tsconfig.app.json",
+  "tsconfig.node.json",
+]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "2026 Elena Gantner"
+
+[[annotations]]
+path = ["public/favicon.svg", "docs/screenshot.png"]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "2026 Elena Gantner"
+
+[[annotations]]
+path = [".gitignore", "README.md"]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "2026 Elena Gantner"
+
+[[annotations]]
+path = ["LICENSE"]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "2026 Elena Gantner"

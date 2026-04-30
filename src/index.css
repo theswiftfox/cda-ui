@@ -1,0 +1,92 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* SPDX-FileCopyrightText: 2026 Elena Gantner */
+
+/* CDA UI - Global Reset & Variables */
+:root {
+  /* dark industrial palette */
+  --bg-darkest: #0a0c10;
+  --bg-dark: #0f1117;
+  --bg-mid: #161822;
+  --bg-panel: #1a1d2b;
+  --bg-card: #1e2235;
+  --bg-hover: #252940;
+  --bg-selected: #2a3050;
+  --bg-input: #12141e;
+
+  --border-dark: #1e2235;
+  --border-mid: #2a2f45;
+  --border-light: #353b55;
+  --border-accent: #4a6fa5;
+
+  --text-primary: #c8cdd8;
+  --text-secondary: #8890a5;
+  --text-muted: #5a6278;
+  --text-bright: #e8ecf4;
+
+  --accent-blue: #4a9eff;
+  --accent-blue-dim: #2a5a8a;
+  --accent-green: #3ddc84;
+  --accent-green-dim: #1a5c35;
+  --accent-red: #ff4c4c;
+  --accent-red-dim: #6a1a1a;
+  --accent-yellow: #ffc107;
+  --accent-yellow-dim: #6a5000;
+  --accent-orange: #ff8a3d;
+  --accent-cyan: #4dd0e1;
+  --accent-purple: #b388ff;
+
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-darkest);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-mid);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
