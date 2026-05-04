@@ -64,11 +64,25 @@ async function loadExecutions(opId: string) {
   execListLoading.value = true
   try {
     const result = await sovdClient.getOperationExecutions(props.ecuId, opId)
-    const items = (result.items ?? []).map((e) => ({
+    const rawItems = (result.items ?? []).map((e) => ({
       id: typeof e.id === 'string' ? e.id : String(e.id),
-      status: typeof e.status === 'string' ? e.status : 'unknown',
+      status: typeof e.status === 'string' ? e.status : '',
     }))
-    executions.value = items
+
+    // The list endpoint may not include status for each item.
+    // Fetch individual execution details in parallel to get the real status.
+    const enriched = await Promise.all(
+      rawItems.map(async (item) => {
+        if (item.status) return item
+        try {
+          const detail = await sovdClient.getOperationExecution(props.ecuId, opId, item.id)
+          return { id: item.id, status: detail.status ?? 'unknown' }
+        } catch {
+          return { ...item, status: 'unknown' }
+        }
+      })
+    )
+    executions.value = enriched
   } catch {
     executions.value = []
   } finally {
@@ -155,10 +169,15 @@ async function pollExecution(execId: string) {
 async function stopExecution(execId: string) {
   if (!selectedOp.value) return
   try {
-    await sovdClient.deleteOperationExecution(props.ecuId, selectedOp.value, execId)
+    const result = await sovdClient.deleteOperationExecution(props.ecuId, selectedOp.value, execId)
     await loadExecutions(selectedOp.value)
     if (execResult.value && String(execResult.value.id) === execId) {
-      execResult.value = { ...execResult.value, status: 'stopped' }
+      // Show the server's response if available, otherwise patch the status locally
+      if (result && typeof result === 'object') {
+        execResult.value = result as unknown as Record<string, unknown>
+      } else {
+        execResult.value = { ...execResult.value, status: 'stopped' }
+      }
     }
   } catch (err) {
     execError.value = err instanceof Error ? err.message : String(err)

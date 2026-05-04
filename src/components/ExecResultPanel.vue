@@ -3,6 +3,7 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Elena Gantner
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ParamSchema } from '../types/sovd'
 import ParameterForm from './ParameterForm.vue'
 
@@ -18,16 +19,24 @@ const emit = defineEmits<{
   stop: [execId: string]
 }>()
 
-const status = typeof props.execResult.status === 'string' ? props.execResult.status : null
-const execId = typeof props.execResult.id === 'string' ? props.execResult.id : null
-const progress = typeof props.execResult.progress === 'number' ? props.execResult.progress : null
-const outParams =
+const status = computed(() =>
+  typeof props.execResult.status === 'string' ? props.execResult.status : null
+)
+const execId = computed(() =>
+  typeof props.execResult.id === 'string' ? props.execResult.id : null
+)
+const progress = computed(() =>
+  typeof props.execResult.progress === 'number' ? props.execResult.progress : null
+)
+const outParams = computed(() =>
   props.execResult.parameters && typeof props.execResult.parameters === 'object'
     ? (props.execResult.parameters as Record<string, unknown>)
     : null
+)
 
-const hasOutputSchema =
+const hasOutputSchema = computed(() =>
   props.outputSchema !== undefined && Object.keys(props.outputSchema).length > 0
+)
 
 function hasCap(cap: string): boolean {
   // When no capabilities are provided (old behavior / fallback), allow everything
