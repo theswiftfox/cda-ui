@@ -66,12 +66,20 @@ function hasCap(cap: string): boolean {
               Poll
             </button>
             <button
-              v-if="hasCap('stop')"
+              v-if="ex.status === 'running' && hasCap('stop')"
               class="btn btn-tiny btn-danger"
               @click="emit('stop', ex.id)"
-              title="Stop and remove this execution"
+              title="Stop this execution"
             >
-              Stop / Delete
+              Stop
+            </button>
+            <button
+              v-if="ex.status !== 'running'"
+              class="btn btn-tiny btn-danger"
+              @click="emit('stop', ex.id)"
+              title="Delete this execution"
+            >
+              Delete
             </button>
           </td>
         </tr>

@@ -341,8 +341,8 @@ class SovdClient {
     ecuId: string,
     operationId: string,
     executionId: string
-  ): Promise<void> {
-    return this.request<void>(
+  ): Promise<OperationExecution | undefined> {
+    return this.request<OperationExecution | undefined>(
       "DELETE",
       `/components/${ecuId}/operations/${operationId}/executions/${executionId}`
     );
