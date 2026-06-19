@@ -28,9 +28,6 @@
       "icons/icon.png",
       "icons/128x128.png",
       "icons/256x256.png"
-    ],
-    "externalBin": [
-      "binaries/opensovd-cda"
     ]
   },
   "plugins": {
