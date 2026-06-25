@@ -17,12 +17,11 @@ const error = ref<string | null>(null)
 const loading = ref(false)
 const healthOk = ref<boolean | null>(null)
 
-const isTauri = !!window.__TAURI_INTERNALS__
 
 let healthTimeout: ReturnType<typeof setTimeout> | null = null
 
 async function checkHealth() {
-  if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
+  sovdClient.setBaseUrl(serverUrl.value)
   sovdClient.setDisplayUrl(serverUrl.value)
   const ok = await sovdClient.checkHealth()
   healthOk.value = ok
@@ -45,7 +44,7 @@ async function handleLogin() {
   loading.value = true
   error.value = null
   try {
-    if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
+    sovdClient.setBaseUrl(serverUrl.value)
     sovdClient.setDisplayUrl(serverUrl.value)
     await sovdClient.login(clientId.value, clientSecret.value)
     emit('login')
@@ -57,7 +56,7 @@ async function handleLogin() {
 }
 
 function handleSkip() {
-  if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
+  sovdClient.setBaseUrl(serverUrl.value)
   sovdClient.setDisplayUrl(serverUrl.value)
   sovdClient.clearToken()
   emit('login')

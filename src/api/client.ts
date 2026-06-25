@@ -33,37 +33,50 @@ const API_PREFIX = "/vehicle/v15";
 const isTauri =
   typeof window !== "undefined" && !!window.__TAURI_INTERNALS__;
 
-let tauriFetch: typeof globalThis.fetch | null = null;
-if (isTauri) {
-  // Dynamic import — only loaded when running inside Tauri.
-  import("@tauri-apps/plugin-http").then((mod) => {
-    tauriFetch = mod.fetch as typeof globalThis.fetch;
-  });
-}
+/**
+ * Lazy-initialized Tauri fetch.  The promise resolves once the dynamic import
+ * completes.  Every call to httpFetch() awaits this so there is no race
+ * between component mount and plugin readiness.
+ */
+const tauriFetchReady: Promise<typeof globalThis.fetch | null> = isTauri
+  ? import("@tauri-apps/plugin-http").then(
+      (mod) => mod.fetch as typeof globalThis.fetch
+    )
+  : Promise.resolve(null);
 
 /**
  * Fetch wrapper that delegates to the Tauri HTTP plugin when available,
  * otherwise falls back to the browser's native fetch().
+ *
+ * In browser dev mode, absolute URLs are rewritten through Vite's
+ * `/__proxy/<encoded-url>` middleware so that requests to arbitrary remote
+ * servers bypass CORS without needing Tauri.
  */
-function httpFetch(
+async function httpFetch(
   input: RequestInfo | URL,
   init?: RequestInit
 ): Promise<Response> {
+  const tauriFetch = await tauriFetchReady;
   if (tauriFetch) return tauriFetch(input, init);
+
+  // In browser dev mode, route absolute URLs through the Vite proxy plugin.
+  if (typeof input === "string" && input.startsWith("http")) {
+    input = `/__proxy/${encodeURIComponent(input)}`;
+  } else if (input instanceof URL) {
+    input = `/__proxy/${encodeURIComponent(input.toString())}`;
+  }
+
   return fetch(input, init);
 }
 
 /**
- * In dev mode Vite proxies /vehicle/* and /health/* to the CDA backend,
- * so all fetches must use **relative** URLs (empty baseUrl).
+ * The baseUrl is set to the user-supplied server URL in all contexts.
  *
- * The "display URL" shown in the UI is purely informational; it tells the
- * user which backend the Vite proxy forwards to, but never ends up in a
- * fetch() call while running through the dev server.
- *
- * For a production build served from a different origin you can call
- * setBaseUrl("https://cda-host:20002") and the fetches will go there
- * directly (the target must then allow CORS or be same-origin).
+ * - In Tauri: requests are made directly via the Rust HTTP plugin.
+ * - In browser dev mode: httpFetch() rewrites absolute URLs through
+ *   Vite's /__proxy/ middleware, bypassing CORS.
+ * - In production (same-origin): baseUrl can be left empty for relative
+ *   URLs, or set to the CDA origin.
  */
 class SovdClient {
   /** URL prefix used in actual fetch() calls. Empty = relative / same-origin. */
