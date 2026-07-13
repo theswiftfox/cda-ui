@@ -25,6 +25,34 @@ import { parseOperationDocs } from "../lib/docsParser";
 
 const API_PREFIX = "/vehicle/v15";
 
+// ---------------------------------------------------------------------------
+// Tauri-aware fetch: in a Tauri context, use @tauri-apps/plugin-http which
+// makes requests from the Rust side (bypassing webview CORS restrictions).
+// In a plain browser context, fall back to the native fetch() API.
+// ---------------------------------------------------------------------------
+const isTauri =
+  typeof window !== "undefined" && !!window.__TAURI_INTERNALS__;
+
+let tauriFetch: typeof globalThis.fetch | null = null;
+if (isTauri) {
+  // Dynamic import — only loaded when running inside Tauri.
+  import("@tauri-apps/plugin-http").then((mod) => {
+    tauriFetch = mod.fetch as typeof globalThis.fetch;
+  });
+}
+
+/**
+ * Fetch wrapper that delegates to the Tauri HTTP plugin when available,
+ * otherwise falls back to the browser's native fetch().
+ */
+function httpFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  if (tauriFetch) return tauriFetch(input, init);
+  return fetch(input, init);
+}
+
 /**
  * In dev mode Vite proxies /vehicle/* and /health/* to the CDA backend,
  * so all fetches must use **relative** URLs (empty baseUrl).
@@ -107,7 +135,7 @@ class SovdClient {
     path: string,
     body?: unknown
   ): Promise<T> {
-    const resp = await fetch(this.url(path), {
+    const resp = await httpFetch(this.url(path), {
       method,
       headers: this.headers(),
       body: body ? JSON.stringify(body) : undefined,
@@ -163,7 +191,7 @@ class SovdClient {
       }
     }
 
-    const resp = await fetch(this.url(path), {
+    const resp = await httpFetch(this.url(path), {
       method,
       headers,
       body: fetchBody,
@@ -187,7 +215,7 @@ class SovdClient {
   // -- public API -----------------------------------------------------------
 
   async login(clientId: string, clientSecret: string): Promise<string> {
-    const resp = await fetch(this.url("/authorize"), {
+    const resp = await httpFetch(this.url("/authorize"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -205,7 +233,7 @@ class SovdClient {
 
   async checkHealth(): Promise<boolean> {
     try {
-      const resp = await fetch(this.healthUrl());
+      const resp = await httpFetch(this.healthUrl());
       return resp.status === 204;
     } catch {
       return false;
@@ -222,7 +250,17 @@ class SovdClient {
   }
 
   async triggerVariantDetection(ecuId: string): Promise<void> {
-    return this.request<void>("PUT", `/components/${ecuId}`);
+    // Server returns 200 with empty body — skip JSON parsing
+    const resp = await httpFetch(this.url(`/components/${ecuId}`), {
+      method: "PUT",
+      headers: this.headers(),
+    });
+    if (!resp.ok) {
+      const errorBody = await resp.text().catch(() => resp.statusText);
+      throw new Error(
+        `PUT /components/${ecuId} failed (${resp.status}): ${errorBody}`
+      );
+    }
   }
 
   // Data
@@ -443,7 +481,7 @@ class SovdClient {
       h["Authorization"] = `Bearer ${this.token}`;
     }
 
-    const resp = await fetch(this.url(`/components/${ecuId}/genericservice`), {
+    const resp = await httpFetch(this.url(`/components/${ecuId}/genericservice`), {
       method: "PUT",
       headers: h,
       body: bytes,

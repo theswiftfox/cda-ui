@@ -7,6 +7,8 @@ import { ref, watch } from 'vue'
 import LoginPanel from './components/LoginPanel.vue'
 import EcuTree from './components/EcuTree.vue'
 import EcuDetailPanel from './components/EcuDetailPanel.vue'
+import CdaStatusBadge from './components/login/CdaStatusBadge.vue'
+import CdaLogViewer from './components/login/CdaLogViewer.vue'
 import sovdClient from './api/client'
 import type { EcuDetail } from './types/sovd'
 import './App.css'
@@ -17,13 +19,32 @@ const ecuDetails = ref(new Map<string, EcuDetail>())
 const statusMessage = ref('')
 const connectionInfo = ref('')
 const requestedTab = ref<string | null>(null)
+const logViewerOpen = ref(false)
+
+const isTauri = !!window.__TAURI_INTERNALS__
 
 function handleLogin() {
   authenticated.value = true
   connectionInfo.value = `Connected to ${sovdClient.getDisplayUrl()}${sovdClient.isAuthenticated() ? ' (Authorized)' : ' (No Auth)'}`
 }
 
-function handleLogout() {
+async function handleLogout() {
+  // If a managed CDA process is running, ask before stopping
+  if (isTauri) {
+    try {
+      const { getCdaStatus, stopCda } = await import('./api/cdaProcess')
+      const status = await getCdaStatus()
+      if (status.type === 'Running' || status.type === 'Starting') {
+        const stop = confirm('A managed CDA process is running. Stop it on disconnect?')
+        if (stop) {
+          await stopCda()
+        }
+      }
+    } catch {
+      // ignore — may not be in managed mode
+    }
+  }
+
   sovdClient.clearToken()
   authenticated.value = false
   selectedEcu.value = null
@@ -56,6 +77,18 @@ function handleSelectEcu(ecuId: string) {
 
 function handleSwitchTab(tab: string) {
   requestedTab.value = tab
+}
+
+async function handleTriggerVariantDetection() {
+  if (!selectedEcu.value) return
+  const ecuId = selectedEcu.value
+  statusMessage.value = `Triggering variant detection on ${ecuId}...`
+  try {
+    await sovdClient.triggerVariantDetection(ecuId)
+    await loadEcuDetail(ecuId)
+  } catch (err) {
+    statusMessage.value = `Variant detection failed for ${ecuId}: ${err instanceof Error ? err.message : String(err)}`
+  }
 }
 
 async function handleRefreshAll() {
@@ -119,6 +152,7 @@ async function handleRefreshAll() {
           :detail="ecuDetails.get(selectedEcu) ?? null"
           :requested-tab="requestedTab"
           @refresh-detail="loadEcuDetail(selectedEcu!)"
+          @trigger-variant-detection="handleTriggerVariantDetection"
         />
         <div v-else class="welcome-panel">
           <div class="welcome-content">
@@ -147,7 +181,21 @@ async function handleRefreshAll() {
     <!-- Status Bar -->
     <footer class="app-statusbar">
       <span class="status-text">{{ statusMessage || 'Ready' }}</span>
-      <span class="status-server">{{ sovdClient.getDisplayUrl() }}</span>
+      <div class="status-right">
+        <!-- CDA Process Status Badge (Tauri only) -->
+        <CdaStatusBadge
+          v-if="isTauri"
+          @click="logViewerOpen = true"
+        />
+        <span class="status-server">{{ sovdClient.getDisplayUrl() }}</span>
+      </div>
     </footer>
+
+    <!-- Log viewer overlay -->
+    <CdaLogViewer
+      v-if="isTauri"
+      :visible="logViewerOpen"
+      @close="logViewerOpen = false"
+    />
   </div>
 </template>

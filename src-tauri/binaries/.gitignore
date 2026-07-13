@@ -1,0 +1,9 @@
+# Sidecar binaries are platform-specific and should not be committed.
+# Place the CDA binary here with the correct target-triple suffix:
+#   opensovd-cda-x86_64-unknown-linux-gnu
+#   opensovd-cda-x86_64-pc-windows-msvc.exe
+#   opensovd-cda-aarch64-apple-darwin
+#
+# The placeholder file is needed for `cargo check` / dev builds.
+*
+!.gitignore

@@ -4,6 +4,18 @@
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "updater:default",
+    "dialog:default",
+    "shell:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "http://localhost" },
+        { "url": "http://localhost:*" },
+        { "url": "http://127.0.0.1" },
+        { "url": "http://127.0.0.1:*" }
+      ]
+    }
   ]
 }

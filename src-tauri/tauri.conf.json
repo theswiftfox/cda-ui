@@ -28,6 +28,17 @@
       "icons/icon.png",
       "icons/128x128.png",
       "icons/256x256.png"
+    ],
+    "externalBin": [
+      "binaries/opensovd-cda"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUwMTU5NzA5RDEzRjc1QUYKUldTdmRUL1JDWmNWNExCTCtDL2ZMc0k0S1NsdnpZNzVHZlpMblliVVdoYzdXTVMwUlhoTzllN1IK",
+      "endpoints": [
+        "https://github.com/theswiftfox/cda-ui/releases/latest/download/latest.json"
+      ]
+    }
   }
 }

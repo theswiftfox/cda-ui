@@ -35,8 +35,25 @@ jobs:
       - run: npm run build
 
   tauri-build:
-    name: Tauri Build
+    name: Tauri Build (Linux)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/install-linux-deps
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm run build:desktop
+
+  tauri-build-macos:
+    name: Tauri Build (macOS)
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,8 +64,21 @@ jobs:
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
       - run: npm ci
-      - run: npm run build
-      - run: cargo build
-        working-directory: src-tauri
+      - run: npm run build:desktop
+
+  tauri-build-windows:
+    name: Tauri Build (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - run: npm run build:desktop
