@@ -26,6 +26,7 @@
     "createUpdaterArtifacts": true,
     "icon": [
       "icons/icon.png",
+      "icons/icon.ico",
       "icons/128x128.png",
       "icons/256x256.png"
     ]
