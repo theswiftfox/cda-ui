@@ -2,5 +2,5 @@
 // SPDX-FileCopyrightText: 2026 Elena Gantner
 
 fn main() {
-    tauri_build::build()
+    tauri_build::build();
 }
