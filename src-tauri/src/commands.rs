@@ -14,16 +14,12 @@ pub async fn start_cda(
 }
 
 #[tauri::command]
-pub async fn stop_cda(
-    manager: State<'_, CdaManager>,
-) -> Result<(), String> {
+pub async fn stop_cda(manager: State<'_, CdaManager>) -> Result<(), String> {
     manager.stop().await
 }
 
 #[tauri::command]
-pub async fn get_cda_status(
-    manager: State<'_, CdaManager>,
-) -> Result<CdaStatus, String> {
+pub async fn get_cda_status(manager: State<'_, CdaManager>) -> Result<CdaStatus, String> {
     Ok(manager.get_status().await)
 }
 
@@ -36,9 +32,7 @@ pub async fn get_cda_logs(
 }
 
 #[tauri::command]
-pub async fn clear_cda_logs(
-    manager: State<'_, CdaManager>,
-) -> Result<(), String> {
+pub async fn clear_cda_logs(manager: State<'_, CdaManager>) -> Result<(), String> {
     manager.clear_logs().await;
     Ok(())
 }
@@ -47,9 +41,7 @@ pub async fn clear_cda_logs(
 /// Only returns true when compiled with the `bundled-cda` feature and the
 /// sidecar binary actually exists on disk.
 #[tauri::command]
-pub async fn is_bundled_cda_available(
-    app_handle: tauri::AppHandle,
-) -> Result<bool, String> {
+pub async fn is_bundled_cda_available(app_handle: tauri::AppHandle) -> Result<bool, String> {
     #[cfg(feature = "bundled-cda")]
     {
         use tauri_plugin_shell::ShellExt;

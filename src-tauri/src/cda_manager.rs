@@ -51,8 +51,13 @@ fn default_true() -> bool {
 pub enum CdaStatus {
     Stopped,
     Starting,
-    Running { pid: u32 },
-    Crashed { exit_code: Option<i32>, message: String },
+    Running {
+        pid: u32,
+    },
+    Crashed {
+        exit_code: Option<i32>,
+        message: String,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -132,23 +137,18 @@ impl CdaManager {
 
         let mut child_lock = self.inner.child.lock().await;
         if let Some(ref mut child) = *child_lock {
-            let pid = child.id();
-
             // Try graceful shutdown first (SIGTERM on Unix)
             #[cfg(unix)]
             #[allow(clippy::cast_possible_wrap)]
-            if let Some(pid) = pid {
+            if let Some(pid) = child.id() {
                 let _ = nix::sys::signal::kill(
                     nix::unistd::Pid::from_raw(pid as i32),
                     nix::sys::signal::Signal::SIGTERM,
                 );
 
                 // Wait up to 5 seconds for graceful exit
-                let graceful = tokio::time::timeout(
-                    tokio::time::Duration::from_secs(5),
-                    child.wait(),
-                )
-                .await;
+                let graceful =
+                    tokio::time::timeout(tokio::time::Duration::from_secs(5), child.wait()).await;
 
                 if graceful.is_ok() {
                     *child_lock = None;
@@ -230,6 +230,7 @@ fn spawn_child(config: &CdaLaunchConfig) -> Result<(Child, u32), String> {
     // On Windows, prevent a console window from appearing
     #[cfg(windows)]
     {
+        #[allow(unused_imports)]
         use std::os::windows::process::CommandExt;
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
     }
@@ -355,9 +356,7 @@ async fn monitor_process(state: Arc<Inner>, app_handle: tauri::AppHandle) {
                 let attempt = *count;
                 drop(count);
 
-                let msg = format!(
-                    "Auto-restarting CDA (attempt {attempt}/{MAX_RESTART_ATTEMPTS})"
-                );
+                let msg = format!("Auto-restarting CDA (attempt {attempt}/{MAX_RESTART_ATTEMPTS})");
                 state.push_log(&msg).await;
                 let _ = app_handle.emit("cda-log-line", &msg);
 
@@ -375,9 +374,8 @@ async fn monitor_process(state: Arc<Inner>, app_handle: tauri::AppHandle) {
                     }
                 }
             } else {
-                let msg = format!(
-                    "CDA crashed {MAX_RESTART_ATTEMPTS} times, giving up on auto-restart"
-                );
+                let msg =
+                    format!("CDA crashed {MAX_RESTART_ATTEMPTS} times, giving up on auto-restart");
                 state.push_log(&msg).await;
                 let _ = app_handle.emit("cda-log-line", &msg);
             }
