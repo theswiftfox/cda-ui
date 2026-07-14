@@ -25,17 +25,58 @@ import { parseOperationDocs } from "../lib/docsParser";
 
 const API_PREFIX = "/vehicle/v15";
 
+// ---------------------------------------------------------------------------
+// Tauri-aware fetch: in a Tauri context, use @tauri-apps/plugin-http which
+// makes requests from the Rust side (bypassing webview CORS restrictions).
+// In a plain browser context, fall back to the native fetch() API.
+// ---------------------------------------------------------------------------
+const isTauri =
+  typeof window !== "undefined" && !!window.__TAURI_INTERNALS__;
+
 /**
- * In dev mode Vite proxies /vehicle/* and /health/* to the CDA backend,
- * so all fetches must use **relative** URLs (empty baseUrl).
+ * Lazy-initialized Tauri fetch.  The promise resolves once the dynamic import
+ * completes.  Every call to httpFetch() awaits this so there is no race
+ * between component mount and plugin readiness.
+ */
+const tauriFetchReady: Promise<typeof globalThis.fetch | null> = isTauri
+  ? import("@tauri-apps/plugin-http").then(
+      (mod) => mod.fetch as typeof globalThis.fetch
+    )
+  : Promise.resolve(null);
+
+/**
+ * Fetch wrapper that delegates to the Tauri HTTP plugin when available,
+ * otherwise falls back to the browser's native fetch().
  *
- * The "display URL" shown in the UI is purely informational; it tells the
- * user which backend the Vite proxy forwards to, but never ends up in a
- * fetch() call while running through the dev server.
+ * In browser dev mode, absolute URLs are rewritten through Vite's
+ * `/__proxy/<encoded-url>` middleware so that requests to arbitrary remote
+ * servers bypass CORS without needing Tauri.
+ */
+async function httpFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  const tauriFetch = await tauriFetchReady;
+  if (tauriFetch) return tauriFetch(input, init);
+
+  // In browser dev mode, route absolute URLs through the Vite proxy plugin.
+  if (typeof input === "string" && input.startsWith("http")) {
+    input = `/__proxy/${encodeURIComponent(input)}`;
+  } else if (input instanceof URL) {
+    input = `/__proxy/${encodeURIComponent(input.toString())}`;
+  }
+
+  return fetch(input, init);
+}
+
+/**
+ * The baseUrl is set to the user-supplied server URL in all contexts.
  *
- * For a production build served from a different origin you can call
- * setBaseUrl("https://cda-host:20002") and the fetches will go there
- * directly (the target must then allow CORS or be same-origin).
+ * - In Tauri: requests are made directly via the Rust HTTP plugin.
+ * - In browser dev mode: httpFetch() rewrites absolute URLs through
+ *   Vite's /__proxy/ middleware, bypassing CORS.
+ * - In production (same-origin): baseUrl can be left empty for relative
+ *   URLs, or set to the CDA origin.
  */
 class SovdClient {
   /** URL prefix used in actual fetch() calls. Empty = relative / same-origin. */
@@ -107,7 +148,7 @@ class SovdClient {
     path: string,
     body?: unknown
   ): Promise<T> {
-    const resp = await fetch(this.url(path), {
+    const resp = await httpFetch(this.url(path), {
       method,
       headers: this.headers(),
       body: body ? JSON.stringify(body) : undefined,
@@ -163,7 +204,7 @@ class SovdClient {
       }
     }
 
-    const resp = await fetch(this.url(path), {
+    const resp = await httpFetch(this.url(path), {
       method,
       headers,
       body: fetchBody,
@@ -187,7 +228,7 @@ class SovdClient {
   // -- public API -----------------------------------------------------------
 
   async login(clientId: string, clientSecret: string): Promise<string> {
-    const resp = await fetch(this.url("/authorize"), {
+    const resp = await httpFetch(this.url("/authorize"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -205,7 +246,7 @@ class SovdClient {
 
   async checkHealth(): Promise<boolean> {
     try {
-      const resp = await fetch(this.healthUrl());
+      const resp = await httpFetch(this.healthUrl());
       return resp.status === 204;
     } catch {
       return false;
@@ -222,7 +263,17 @@ class SovdClient {
   }
 
   async triggerVariantDetection(ecuId: string): Promise<void> {
-    return this.request<void>("PUT", `/components/${ecuId}`);
+    // Server returns 200 with empty body — skip JSON parsing
+    const resp = await httpFetch(this.url(`/components/${ecuId}`), {
+      method: "PUT",
+      headers: this.headers(),
+    });
+    if (!resp.ok) {
+      const errorBody = await resp.text().catch(() => resp.statusText);
+      throw new Error(
+        `PUT /components/${ecuId} failed (${resp.status}): ${errorBody}`
+      );
+    }
   }
 
   // Data
@@ -443,7 +494,7 @@ class SovdClient {
       h["Authorization"] = `Bearer ${this.token}`;
     }
 
-    const resp = await fetch(this.url(`/components/${ecuId}/genericservice`), {
+    const resp = await httpFetch(this.url(`/components/${ecuId}/genericservice`), {
       method: "PUT",
       headers: h,
       body: bytes,

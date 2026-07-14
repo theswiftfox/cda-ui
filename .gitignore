@@ -34,3 +34,10 @@ src-tauri/gen/
 
 # Rust workspace build artifacts
 target/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Rust workspace build artifacts
+target/

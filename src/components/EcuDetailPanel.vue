@@ -34,6 +34,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'refresh-detail': []
+  'trigger-variant-detection': []
 }>()
 
 const activeTab = ref<TabId>('overview')
@@ -76,6 +77,9 @@ const tabs: { id: TabId; label: string }[] = [
       </h2>
       <button class="btn-icon" @click="emit('refresh-detail')" title="Refresh">
         &#x21bb;
+      </button>
+      <button class="btn-icon" @click="emit('trigger-variant-detection')" title="Trigger Variant Detection">
+        &#x26a1;
       </button>
     </div>
 

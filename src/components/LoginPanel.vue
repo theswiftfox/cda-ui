@@ -3,77 +3,56 @@ SPDX-License-Identifier: Apache-2.0
 SPDX-FileCopyrightText: 2026 Elena Gantner
 -->
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import sovdClient from '../api/client'
+import { ref, onMounted } from 'vue'
+import ConnectRemote from './login/ConnectRemote.vue'
+import ConnectLocalExe from './login/ConnectLocalExe.vue'
+import ConnectBundled from './login/ConnectBundled.vue'
+import CdaLogViewer from './login/CdaLogViewer.vue'
 
 const emit = defineEmits<{
   login: []
 }>()
 
-const serverUrl = ref('http://localhost:20002')
-const clientId = ref('test_client')
-const clientSecret = ref('test_secret')
-const error = ref<string | null>(null)
-const loading = ref(false)
-const healthOk = ref<boolean | null>(null)
-
 const isTauri = !!window.__TAURI_INTERNALS__
 
-let healthTimeout: ReturnType<typeof setTimeout> | null = null
+type ConnectionMode = 'remote' | 'local' | 'bundled'
+const mode = ref<ConnectionMode>('remote')
+const bundledAvailable = ref(false)
+const bundledPath = ref('')
+const logViewerOpen = ref(false)
 
-async function checkHealth() {
-  if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
-  sovdClient.setDisplayUrl(serverUrl.value)
-  const ok = await sovdClient.checkHealth()
-  healthOk.value = ok
-}
-
-function scheduleHealthCheck() {
-  if (healthTimeout) clearTimeout(healthTimeout)
-  healthTimeout = setTimeout(checkHealth, 500)
-}
-
-onMounted(() => {
-  scheduleHealthCheck()
-})
-
-watch(serverUrl, () => {
-  scheduleHealthCheck()
-})
-
-async function handleLogin() {
-  loading.value = true
-  error.value = null
-  try {
-    if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
-    sovdClient.setDisplayUrl(serverUrl.value)
-    await sovdClient.login(clientId.value, clientSecret.value)
-    emit('login')
-  } catch (err_) {
-    error.value = err_ instanceof Error ? err_.message : String(err_)
-  } finally {
-    loading.value = false
+onMounted(async () => {
+  if (isTauri) {
+    try {
+      const { isBundledCdaAvailable } = await import('../api/cdaProcess')
+      bundledAvailable.value = await isBundledCdaAvailable()
+      // If bundled is available, we could resolve the sidecar path here.
+      // For now the backend handles path resolution.
+      if (bundledAvailable.value) {
+        bundledPath.value = 'opensovd-cda' // Tauri sidecar name
+      }
+    } catch {
+      // Not in Tauri context or plugin not available
+    }
   }
-}
+})
 
-function handleSkip() {
-  if (isTauri) sovdClient.setBaseUrl(serverUrl.value)
-  sovdClient.setDisplayUrl(serverUrl.value)
-  sovdClient.clearToken()
+function handleLogin() {
   emit('login')
 }
 
-const healthClass = computed(() => {
-  if (healthOk.value === true) return 'healthy'
-  if (healthOk.value === false) return 'unhealthy'
-  return 'unknown'
-})
+/** Available tabs depend on context */
+const modes: { key: ConnectionMode; label: string; tauriOnly: boolean; bundledOnly: boolean }[] = [
+  { key: 'remote', label: 'Connect to Server', tauriOnly: false, bundledOnly: false },
+  { key: 'local', label: 'Start Executable', tauriOnly: true, bundledOnly: false },
+  { key: 'bundled', label: 'Bundled CDA', tauriOnly: true, bundledOnly: true },
+]
 
-const healthTitle = computed(() => {
-  if (healthOk.value === true) return 'CDA is reachable'
-  if (healthOk.value === false) return 'CDA is not reachable'
-  return 'Checking...'
-})
+function isTabVisible(tab: typeof modes[number]): boolean {
+  if (tab.tauriOnly && !isTauri) return false
+  if (tab.bundledOnly && !bundledAvailable.value) return false
+  return true
+}
 </script>
 
 <template>
@@ -85,59 +64,60 @@ const healthTitle = computed(() => {
         <span class="login-subtitle">SOVD Interface</span>
       </div>
 
+      <!-- Mode tabs (only show multiple if in Tauri) -->
+      <div v-if="isTauri" class="login-mode-tabs">
+        <button
+          v-for="tab in modes"
+          :key="tab.key"
+          v-show="isTabVisible(tab)"
+          :class="['login-mode-tab', { active: mode === tab.key }]"
+          @click="mode = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+
+        <!-- Log viewer toggle (only for local/bundled modes) -->
+        <button
+          v-if="mode === 'local' || mode === 'bundled'"
+          class="login-mode-tab log-tab"
+          @click="logViewerOpen = true"
+          title="View CDA logs"
+        >
+          Logs
+        </button>
+      </div>
+
       <div class="login-form">
-        <label>
-          <span class="label-text">Server URL</span>
-          <div class="input-with-status">
-            <input
-              type="text"
-              v-model="serverUrl"
-              placeholder="http://localhost:20002"
-            />
-            <span
-              :class="['health-indicator', healthClass]"
-              :title="healthTitle"
-            />
-          </div>
-        </label>
+        <!-- Remote connection (default / browser) -->
+        <ConnectRemote
+          v-if="mode === 'remote'"
+          @login="handleLogin"
+        />
 
-        <label>
-          <span class="label-text">Client ID</span>
-          <input
-            type="text"
-            v-model="clientId"
-            placeholder="Client ID"
-          />
-        </label>
+        <!-- Start local executable (Tauri only) -->
+        <ConnectLocalExe
+          v-else-if="mode === 'local'"
+          @login="handleLogin"
+        />
 
-        <label>
-          <span class="label-text">Client Secret</span>
-          <input
-            type="password"
-            v-model="clientSecret"
-            placeholder="Client Secret"
-          />
-        </label>
-
-        <div v-if="error" class="login-error">{{ error }}</div>
-
-        <div class="login-actions">
-          <button
-            class="btn btn-primary"
-            @click="handleLogin"
-            :disabled="loading"
-          >
-            {{ loading ? 'Connecting...' : 'Connect & Authorize' }}
-          </button>
-          <button class="btn btn-secondary" @click="handleSkip">
-            Connect without Auth
-          </button>
-        </div>
+        <!-- Bundled CDA (Tauri + feature flag) -->
+        <ConnectBundled
+          v-else-if="mode === 'bundled'"
+          :sidecar-path="bundledPath"
+          @login="handleLogin"
+        />
       </div>
 
       <div class="login-footer">
         Eclipse OpenSOVD - Classic Diagnostic Adapter
       </div>
     </div>
+
+    <!-- Log viewer overlay -->
+    <CdaLogViewer
+      v-if="isTauri"
+      :visible="logViewerOpen"
+      @close="logViewerOpen = false"
+    />
   </div>
 </template>

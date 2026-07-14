@@ -160,6 +160,202 @@
   letter-spacing: 1px;
 }
 
+/* ---- LOGIN MODE TABS ---- */
+
+.login-mode-tabs {
+  display: flex;
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-dark);
+  padding: 0;
+  overflow-x: auto;
+}
+
+.login-mode-tab {
+  flex: 1;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.login-mode-tab:hover {
+  color: var(--text-bright);
+  background: var(--bg-hover);
+}
+
+.login-mode-tab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+}
+
+.login-mode-tab.log-tab {
+  flex: 0;
+  color: var(--text-muted);
+  border-left: 1px solid var(--border-dark);
+}
+
+.login-mode-tab.log-tab:hover {
+  color: var(--accent-cyan);
+}
+
+/* ---- FILE PICKER ---- */
+
+.file-picker {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.file-picker input {
+  flex: 1;
+  cursor: default;
+}
+
+/* ---- CONNECT FORM SHARED STYLES ---- */
+
+.connect-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-form label {
+  display: block;
+  margin-bottom: 16px;
+}
+
+/* ---- ADVANCED SETTINGS ---- */
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.advanced-toggle:hover {
+  color: var(--text-bright);
+}
+
+.advanced-arrow {
+  font-size: 8px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.advanced-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.advanced-settings {
+  padding-left: 16px;
+  border-left: 2px solid var(--border-mid);
+  margin-bottom: 12px;
+}
+
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--accent-blue);
+}
+
+/* ---- CDA STATUS ROW ---- */
+
+.cda-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+}
+
+.cda-status-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.cda-status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-running {
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+}
+
+.status-starting {
+  background: var(--accent-yellow-dim);
+  color: var(--accent-yellow);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.status-crashed {
+  background: var(--accent-red-dim);
+  color: var(--accent-red);
+}
+
+.status-stopped {
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+
+/* ---- BUNDLED INFO ---- */
+
+.bundled-info {
+  font-size: 11px;
+  color: var(--accent-cyan);
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* ---- STATUS BAR RIGHT ---- */
+
+.status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 /* ---- BUTTONS ---- */
 
 .btn {
@@ -346,7 +542,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 24px;
+  height: 28px;
   padding: 0 12px;
   background: var(--bg-mid);
   border-top: 1px solid var(--border-dark);

@@ -28,3 +28,6 @@ clone_on_ref_ptr = "warn"
 # enforce that the type suffix of a literal is always appended directly
 # eg. 12u8 instead of 12_u8
 separated_literal_suffix = "deny"
+
+# deny slicing of strings
+string_slice = "deny"
