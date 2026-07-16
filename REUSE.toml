@@ -6,7 +6,7 @@ version = 1
 [[annotations]]
 path = [
   "package.json",
-  "package-lock.json",
+  "pnpm-lock.yaml",
   "tsconfig.json",
   "tsconfig.app.json",
   "tsconfig.node.json",
