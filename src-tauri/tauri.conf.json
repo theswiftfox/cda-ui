@@ -3,9 +3,9 @@
   "productName": "cda-ui",
   "identifier": "com.cda.ui",
   "build": {
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:5173/ui/",
-    "beforeBuildCommand": "npm run build -- --config vite.config.tauri.ts",
+    "beforeBuildCommand": "pnpm build -- --config vite.config.tauri.ts",
     "frontendDist": "../dist"
   },
   "app": {

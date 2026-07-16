@@ -32,18 +32,19 @@ No external UI library, router, or state management library — the project is i
 ### Prerequisites
 
 - **Node.js** >= 18
+- **pnpm** 10.33.3
 - A running **CDA backend** on `localhost:20002` (the dev server proxies all API calls there)
 
 ### Install
 
 ```sh
-npm install
+pnpm install
 ```
 
 ### Development
 
 ```sh
-npm run dev
+pnpm dev
 ```
 
 Opens the UI at [http://localhost:5173/ui/](http://localhost:5173/ui/). The Vite dev server proxies `/vehicle/*` and `/health/*` requests to the CDA backend at `localhost:20002`.
@@ -51,7 +52,7 @@ Opens the UI at [http://localhost:5173/ui/](http://localhost:5173/ui/). The Vite
 ### Production Build
 
 ```sh
-npm run build
+pnpm build
 ```
 
 Output goes to `dist/`. The build uses `/ui/` as its base path so it can be served embedded in the CDA binary.
@@ -59,7 +60,7 @@ Output goes to `dist/`. The build uses `/ui/` as its base path so it can be serv
 ### Preview Production Build
 
 ```sh
-npm run preview
+pnpm preview
 ```
 
 ## Project Structure

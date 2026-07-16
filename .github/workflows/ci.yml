@@ -15,24 +15,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npx eslint .
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm eslint .
 
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
   tauri-build:
     name: Tauri Build (Linux)
@@ -42,16 +44,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/install-linux-deps
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm ci
-      - run: npm run build:desktop
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:desktop
 
   tauri-build-macos:
     name: Tauri Build (macOS)
@@ -60,16 +63,17 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm ci
-      - run: npm run build:desktop
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:desktop
 
   tauri-build-windows:
     name: Tauri Build (Windows)
@@ -78,13 +82,14 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
       - uses: actions-rust-lang/setup-rust-toolchain@v1
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm ci
-      - run: npm run build:desktop
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:desktop

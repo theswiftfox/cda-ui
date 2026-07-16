@@ -9,7 +9,7 @@ import vueParser from 'vue-eslint-parser'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'target']),
   {
     files: ['**/*.ts'],
     extends: [
