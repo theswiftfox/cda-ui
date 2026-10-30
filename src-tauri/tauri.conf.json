@@ -5,7 +5,7 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:5173/ui/",
-    "beforeBuildCommand": "pnpm build -- --config vite.config.tauri.ts",
+    "beforeBuildCommand": "pnpm build --config vite.config.tauri.ts",
     "frontendDist": "../dist"
   },
   "app": {

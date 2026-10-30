@@ -75,7 +75,7 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: pnpm build:desktop -- --target aarch64-apple-darwin
+        run: pnpm build:desktop --target aarch64-apple-darwin
 
       - name: Build and sign (x86_64)
         env:
@@ -84,7 +84,7 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: pnpm build:desktop -- --target x86_64-apple-darwin
+        run: pnpm build:desktop --target x86_64-apple-darwin
 
       - name: Collect artifacts
         run: |
